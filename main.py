@@ -5,158 +5,224 @@ import random  # Bibliothèque pour générer des placements aléatoires
 # Classe représentant un navire
 class Navire:
     def __init__(self, nom, taille):
-        self.nom = nom  # Nom du navire
-        self.taille = taille  # Taille du navire en cases
-        self.positions = []  # Liste des positions occupées par le navire
-        self.touche = 0  # Nombre de fois où le navire a été touché
+        # Initialise le nom du navire
+        self.nom = nom  # Nom du navire (ex: Porte-avions, Croiseur)
+        # Initialise la taille du navire (en nombre de cases)
+        self.taille = taille
+        # Initialise les positions occupées par le navire (vide au départ)
+        self.positions = []
+        # Initialise le compteur de touches (0 au départ)
+        self.touche = 0
 
     def est_coule(self):
-        return self.touche >= self.taille  # Retourne True si le navire est coulé
+        # Vérifie si le nombre de touches est supérieur ou égal à la taille du navire
+        return self.touche >= self.taille
 
 # Classe représentant le plateau de jeu
 class Plateau:
     def __init__(self):
-        self.grille = [[None for _ in range(10)] for _ in range(10)]  # Grille 10x10 vide
+        # Initialise une grille 10x10 remplie de None (vide)
+        self.grille = [[None for _ in range(10)] for _ in range(10)]
 
     def placer_navire(self, navire, positions):
+        # Pour chaque position dans la liste de positions
         for x, y in positions:
-            self.grille[x][y] = navire  # Place le navire sur les cases spécifiées
-        navire.positions = positions  # Stocke les positions du navire
+            # Associe le navire à la case correspondante dans la grille
+            self.grille[x][y] = navire
+        # Stocke les positions dans l'objet navire
+        navire.positions = positions
 
     def peut_placer_navire(self, taille, x, y, orientation):
+        # Vérifie si le navire peut être placé horizontalement
         if orientation == "horizontal":
-            if y + taille > 10:  # Vérifie si le navire dépasse à droite
+            # Vérifie si le navire dépasse les limites horizontales
+            if y + taille > 10:
                 return False
+            # Vérifie que toutes les cases nécessaires sont libres
             for i in range(taille):
-                if self.grille[x][y + i] is not None:  # Vérifie si les cases sont libres
+                if self.grille[x][y + i] is not None:
                     return False
-        else:  # orientation == "vertical"
-            if x + taille > 10:  # Vérifie si le navire dépasse en bas
+        else:  # Cas d'orientation verticale
+            # Vérifie si le navire dépasse les limites verticales
+            if x + taille > 10:
                 return False
+            # Vérifie que toutes les cases nécessaires sont libres
             for i in range(taille):
-                if self.grille[x + i][y] is not None:  # Vérifie si les cases sont libres
+                if self.grille[x + i][y] is not None:
                     return False
+        # Si toutes les vérifications passent, le placement est possible
         return True
 
     def tirer(self, x, y):
-        if self.grille[x][y] is not None:  # Si un navire est présent sur la case
+        # Vérifie si une cible est présente à la position donnée
+        if self.grille[x][y] is not None:
+            # Récupère le navire présent sur la case
             navire = self.grille[x][y]
-            navire.touche += 1  # Incrémente le nombre de touches sur le navire
-            self.grille[x][y] = "X"  # Marque la case comme touchée
-            return True, navire  # Retourne que la case a été touchée et le navire
+            # Incrémente le compteur de touches du navire
+            navire.touche += 1
+            # Marque la case comme touchée
+            self.grille[x][y] = "X"
+            # Retourne True (touché) et le navire affecté
+            return True, navire
         else:
-            self.grille[x][y] = "O"  # Marque la case comme manquée
+            # Marque la case comme manquée
+            self.grille[x][y] = "O"
+            # Retourne False (manqué) et aucune référence de navire
             return False, None
 
 # Classe représentant un joueur
 class Joueur:
     def __init__(self, nom):
-        self.nom = nom  # Nom du joueur
-        self.plateau = Plateau()  # Plateau du joueur
-        self.navires = []  # Liste des navires du joueur
+        # Initialise le nom du joueur
+        self.nom = nom
+        # Initialise un plateau vide pour le joueur
+        self.plateau = Plateau()
+        # Initialise une liste vide pour stocker les navires du joueur
+        self.navires = []
 
     def ajouter_navire(self, navire):
-        if len(self.navires) < 6:  # Limite le nombre de navires à 6
+        # Vérifie que le nombre de navires ne dépasse pas 6
+        if len(self.navires) < 6:
+            # Ajoute le navire à la liste
             self.navires.append(navire)
         else:
-            raise ValueError("Le nombre maximum de navires a déjà été atteint.")  # Ajoute un navire à la liste
+            # Lève une exception si le maximum est atteint
+            raise ValueError("Le nombre maximum de navires a déjà été atteint.")
 
     def tous_les_navires_coules(self):
-        return all(navire.est_coule() for navire in self.navires)  # Vérifie si tous les navires sont coulés
+        # Vérifie si tous les navires du joueur sont coulés
+        return all(navire.est_coule() for navire in self.navires)
 
 # Interface graphique principale
 class BatailleNavaleApp:
     def __init__(self, root):
-        self.root = root  # Fenêtre principale
-        self.root.title("Bataille Navale")  # Titre de la fenêtre
+        # Référence à la fenêtre racine
+        self.root = root
+        # Définit le titre de la fenêtre
+        self.root.title("Bataille Navale")
 
-        self.joueur = Joueur("Joueur")  # Joueur humain
-        self.ordinateur = Joueur("Ordinateur")  # Joueur ordinateur
+        # Initialise le joueur humain
+        self.joueur = Joueur("Joueur")
+        # Initialise le joueur ordinateur
+        self.ordinateur = Joueur("Ordinateur")
 
-        self.tour_joueur = True  # Indique si c'est le tour du joueur
-        self.partie_terminee = False  # Indique si la partie est terminée
+        # Indique si c'est au tour du joueur (True par défaut)
+        self.tour_joueur = True
+        # Indique si la partie est terminée (False par défaut)
+        self.partie_terminee = False
 
-        self.navire_a_placer = None  # Navire en cours de placement
-        self.orientation = "horizontal"  # Orientation par défaut
+        # Référence au navire en cours de placement (None au départ)
+        self.navire_a_placer = None
+        # Orientation par défaut pour le placement des navires
+        self.orientation = "horizontal"
 
-        self.creer_interface()  # Création de l'interface graphique
-        self.nouvelle_partie()  # Initialisation d'une nouvelle partie
+        # Crée l'interface graphique
+        self.creer_interface()
+        # Initialise une nouvelle partie
+        self.nouvelle_partie()
 
     def creer_interface(self):
-        # Création des grilles pour le joueur et l'ordinateur
-        self.grille_joueur = tk.Frame(self.root)  # Grille du joueur
+        # Création de la grille pour le joueur
+        self.grille_joueur = tk.Frame(self.root)
+        # Place la grille dans la fenêtre
         self.grille_joueur.grid(row=0, column=0, padx=10, pady=10)
+        # Génère les boutons associés à la grille du joueur
         self.boutons_joueur = self.creer_grille(self.grille_joueur, self.joueur.plateau, False)
 
-        self.grille_ordinateur = tk.Frame(self.root)  # Grille de l'ordinateur
+        # Création de la grille pour l'ordinateur
+        self.grille_ordinateur = tk.Frame(self.root)
+        # Place la grille dans la fenêtre
         self.grille_ordinateur.grid(row=0, column=1, padx=10, pady=10)
+        # Génère les boutons associés à la grille de l'ordinateur
         self.boutons_ordinateur = self.creer_grille(self.grille_ordinateur, self.ordinateur.plateau, True)
 
-        # Panneau de contrôle
-        self.panneau_controle = tk.Frame(self.root)  # Panneau pour les boutons et informations
+        # Création du panneau de contrôle pour les interactions
+        self.panneau_controle = tk.Frame(self.root)
+        # Place le panneau sous les grilles
         self.panneau_controle.grid(row=1, column=0, columnspan=2, pady=10)
 
-        self.label_tour = tk.Label(self.panneau_controle, text="Placez vos navires")  # Indicateur de tour
+        # Label pour afficher les informations de tour
+        self.label_tour = tk.Label(self.panneau_controle, text="Placez vos navires")
         self.label_tour.pack()
 
-        # Indicateurs des navires coulés
+        # Label pour indiquer les navires coulés du joueur
         self.label_navires_joueur = tk.Label(self.panneau_controle, text="Navires coulés (Joueur) : Aucun")
         self.label_navires_joueur.pack()
 
+        # Label pour indiquer les navires coulés de l'ordinateur
         self.label_navires_ordinateur = tk.Label(self.panneau_controle, text="Navires coulés (Ordinateur) : Aucun")
         self.label_navires_ordinateur.pack()
 
-        # Boutons pour changer l'orientation
+        # Bouton pour changer l'orientation en horizontal
         self.bouton_horizontal = tk.Button(self.panneau_controle, text="Horizontal", command=lambda: self.set_orientation("horizontal"))
         self.bouton_horizontal.pack(side=tk.LEFT, padx=5)
 
+        # Bouton pour changer l'orientation en vertical
         self.bouton_vertical = tk.Button(self.panneau_controle, text="Vertical", command=lambda: self.set_orientation("vertical"))
         self.bouton_vertical.pack(side=tk.LEFT, padx=5)
 
-        self.bouton_nouvelle_partie = tk.Button(self.panneau_controle, text="Nouvelle Partie", command=self.nouvelle_partie)  # Bouton pour réinitialiser
+        # Bouton pour démarrer une nouvelle partie
+        self.bouton_nouvelle_partie = tk.Button(self.panneau_controle, text="Nouvelle Partie", command=self.nouvelle_partie)
         self.bouton_nouvelle_partie.pack(side=tk.RIGHT, padx=5)
 
     def creer_grille(self, frame, plateau, est_ordinateur):
-        boutons = []  # Liste des boutons de la grille
+        # Initialise une liste pour contenir les boutons de la grille
+        boutons = []
+        # Parcourt les lignes de la grille
         for x in range(10):
+            # Initialise une liste pour la ligne courante
             ligne = []
+            # Parcourt les colonnes de la grille
             for y in range(10):
-                bouton = tk.Button(frame, width=2, height=1, bg="light blue", command=lambda x=x, y=y: self.placer_navire(x, y) if not est_ordinateur else self.tirer(x, y))  # Bouton avec action différente selon le type de grille
-                bouton.grid(row=x, column=y)  # Placement du bouton dans la grille
+                # Crée un bouton avec une commande spécifique selon le type de grille
+                bouton = tk.Button(frame, width=2, height=1, bg="light blue", command=lambda x=x, y=y: self.placer_navire(x, y) if not est_ordinateur else self.tirer(x, y))
+                # Place le bouton dans la grille Tkinter
+                bouton.grid(row=x, column=y)
+                # Ajoute le bouton à la ligne courante
                 ligne.append(bouton)
+            # Ajoute la ligne complète à la liste des boutons
             boutons.append(ligne)
+        # Retourne la grille complète de boutons
         return boutons
 
     def set_orientation(self, orientation):
-        self.orientation = orientation  # Change l'orientation des navires
+        # Met à jour l'orientation actuelle des navires
+        self.orientation = orientation
 
     def mettre_a_jour_indicateur_navires(self):
+        # Liste des noms des navires coulés pour le joueur
         navires_joueur_coules = [navire.nom for navire in self.joueur.navires if navire.est_coule()]
+        # Liste des noms des navires coulés pour l'ordinateur
         navires_ordinateur_coules = [navire.nom for navire in self.ordinateur.navires if navire.est_coule()]
 
+        # Met à jour le texte du label des navires coulés du joueur
         self.label_navires_joueur.config(text=f"Navires coulés (Joueur) : {', '.join(navires_joueur_coules) if navires_joueur_coules else 'Aucun'}")
+        # Met à jour le texte du label des navires coulés de l'ordinateur
         self.label_navires_ordinateur.config(text=f"Navires coulés (Ordinateur) : {', '.join(navires_ordinateur_coules) if navires_ordinateur_coules else 'Aucun'}")
 
     def nouvelle_partie(self):
-        # Réinitialisation des plateaux
-        self.joueur.plateau = Plateau()  # Nouveau plateau pour le joueur
-        self.ordinateur.plateau = Plateau()  # Nouveau plateau pour l'ordinateur
-        self.joueur.navires = []  # Réinitialise les navires du joueur
-        self.ordinateur.navires = []  # Réinitialise les navires de l'ordinateur
-        self.tour_joueur = True  # Le joueur commence
-        self.partie_terminee = False  # Réinitialise l'état de la partie
+        # Réinitialise les plateaux des deux joueurs
+        self.joueur.plateau = Plateau()
+        self.ordinateur.plateau = Plateau()
+        # Réinitialise les listes de navires des deux joueurs
+        self.joueur.navires = []
+        self.ordinateur.navires = []
+        # Réinitialise le tour du joueur
+        self.tour_joueur = True
+        # Réinitialise l'état de la partie (non terminée)
+        self.partie_terminee = False
+        # Met à jour le texte du label pour indiquer le placement des navires
         self.label_tour.config(text="Placez vos navires")
 
-        # Réinitialisation des boutons
+        # Réinitialise les boutons des grilles
         for x in range(10):
             for y in range(10):
-                self.boutons_joueur[x][y].config(text="", bg="light blue", state="normal")  # Réinitialisation des boutons du joueur
-                self.boutons_ordinateur[x][y].config(text="", bg="light blue", state="disabled")  # Réinitialisation des boutons de l'ordinateur
+                self.boutons_joueur[x][y].config(text="", bg="light blue", state="normal")
+                self.boutons_ordinateur[x][y].config(text="", bg="light blue", state="disabled")
 
-        # Réinitialisation des indicateurs
+        # Met à jour les indicateurs de navires coulés
         self.mettre_a_jour_indicateur_navires()
-
-        # Préparation pour le placement manuel des navires
+        # Définit les navires à placer pour le joueur
         self.navires_a_placer = [
             ("Porte-avions", 5),
             ("Croiseur", 4),
@@ -165,10 +231,13 @@ class BatailleNavaleApp:
             ("Sous-marin 1", 2),
             ("Sous-marin 2", 2)
         ]
-        self.placement_navires_aleatoire(self.ordinateur)  # Placement aléatoire des navires de l'ordinateur
-        self.selectionner_prochain_navire()  # Préparation pour le placement des navires du joueur
+        # Place les navires de l'ordinateur aléatoirement
+        self.placement_navires_aleatoire(self.ordinateur)
+        # Prépare le placement du premier navire du joueur
+        self.selectionner_prochain_navire()
 
     def placement_navires_aleatoire(self, joueur):
+        # Parcourt la liste des navires à placer
         for nom, taille in [
             ("Porte-avions", 5),
             ("Croiseur", 4),
@@ -178,10 +247,11 @@ class BatailleNavaleApp:
             ("Sous-marin 2", 2)
         ]:
             place = False
+            # Essaye de placer le navire jusqu'à trouver une position valide
             while not place:
-                x = random.randint(0, 9)  # Coordonnée aléatoire en x
-                y = random.randint(0, 9)  # Coordonnée aléatoire en y
-                orientation = random.choice(["horizontal", "vertical"])  # Orientation aléatoire
+                x = random.randint(0, 9)
+                y = random.randint(0, 9)
+                orientation = random.choice(["horizontal", "vertical"])
                 if joueur.plateau.peut_placer_navire(taille, x, y, orientation):
                     positions = [(x + i, y) if orientation == "vertical" else (x, y + i) for i in range(taille)]
                     navire = Navire(nom, taille)
@@ -190,6 +260,7 @@ class BatailleNavaleApp:
                     place = True
 
     def placer_navire(self, x, y):
+        # Gère le placement manuel d'un navire par le joueur
         if self.partie_terminee:
             return
 
@@ -208,6 +279,7 @@ class BatailleNavaleApp:
                 self.selectionner_prochain_navire()
 
     def tirer(self, x, y):
+        # Gère le tir sur la grille de l'ordinateur
         if self.partie_terminee:
             return
 
@@ -231,6 +303,7 @@ class BatailleNavaleApp:
             self.root.after(1000, self.tour_ordinateur)
 
     def selectionner_prochain_navire(self):
+        # Prépare le placement du prochain navire pour le joueur
         if self.navires_a_placer:
             nom, taille = self.navires_a_placer.pop(0)
             self.navire_a_placer = Navire(nom, taille)
@@ -242,6 +315,7 @@ class BatailleNavaleApp:
                     self.boutons_ordinateur[x][y].config(state="normal")
 
     def tour_ordinateur(self):
+        # Simule le tour de l'ordinateur avec un tir aléatoire
         while True:
             x, y = random.randint(0, 9), random.randint(0, 9)
             if self.boutons_joueur[x][y]["state"] == "normal":
@@ -264,6 +338,9 @@ class BatailleNavaleApp:
         self.label_tour.config(text="Tour : Joueur")
 
 if __name__ == "__main__":
+    # Crée la fenêtre principale Tkinter
     root = tk.Tk()
+    # Initialise l'application Bataille Navale
     app = BatailleNavaleApp(root)
+    # Lance la boucle principale de Tkinter
     root.mainloop()
